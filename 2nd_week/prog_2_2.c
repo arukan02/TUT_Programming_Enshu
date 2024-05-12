@@ -25,8 +25,8 @@ void factorize(int n, int divisor) {
         } else {
             printf("%d", divisor); // Print the last factor without "x" separator
         }
-        factorize(n / divisor, divisor); // Recursively call with reduced n
+        factorize(n / divisor, divisor); 
     } else {
-        factorize(n, divisor + 1); // Try the next divisor
+        factorize(n, divisor + 1); 
     }
 }
