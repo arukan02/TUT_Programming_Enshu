@@ -99,12 +99,7 @@ void print_queue(Queue *x) {
 }
 
 int find_next(int current){
-    if (current == ARRAY_MAX - 1){
-        return 0;
-    }
-    else {
-        return current + 1;
-    }
+        return (current + 1) % ARRAY_MAX;
 }
 
 /* print all data (detailed) */
