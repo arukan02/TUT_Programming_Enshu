@@ -22,10 +22,9 @@ void print_list(Node *x);
 int main(void) {
   Node *sentinel_node;
   Node *tmp; /* For assignment 4.2 */
-  int num, insert_key;
+  int num;
   char str[STR_MAX];
   sentinel_node = initialize();
-  tmp = sentinel_node;
   while(1) {
     puts("Enter the operation number.");
     printf("1. Insert, 2. Delete, 3. Print, 4. Exit: ");
@@ -38,22 +37,7 @@ int main(void) {
       fgets(str, sizeof(str), stdin);
       num = atoi(str);
       /* assignment 4.2 */
-      if (sentinel_node->next == sentinel_node) {
-        insertNextTo(sentinel_node, num);
-      }
-      else{
-        printf("Input a key to specify the insert location: ");
-        fgets(str, sizeof(str), stdin);
-        insert_key = atoi(str);
-        tmp = searchNodeByKey(tmp, insert_key);
-        if (tmp == NULL) {
-          printf("%d not found\n", insert_key);
-        }
-        else {
-          insertNextTo(tmp, num);
-          //mau masukin ke sebelumnya, tapi bisa masuk ke sentinel
-        }
-      }
+      insertNextTo(sentinel_node, num);
       break;
     case 2:
       printf("Input a key to delete: ");
@@ -70,14 +54,13 @@ int main(void) {
   return 0;
 }
 
+//DESCRIPTION OF THE FUNCTIONS
 Node *initialize(void) {
   Node *x;
   if ((x = (Node *)malloc(sizeof(Node))) == NULL) {
     puts("No resource remained.");
     exit(1);
   }
-  //set a default value for key
-  x->key = 0;
   x->next = x;
   return x;
 }
@@ -85,19 +68,23 @@ Node *initialize(void) {
 void insertNextTo(Node *x, int in_key) {
   Node *ins;
   ins = initialize();
+  /* */
   ins->key = in_key;
   ins->next = x->next;
+  /* */
   x->next = ins;
 }
 
 /* x should be sentinel_node */
+//sentinel node is a special node that is only a placeholder
+//usualy it doesn't hold a meaningful data
+//new data usually is inserted after the sentinel node
 Node *searchNodeByKey(Node *x, int key) {
   Node *search = x->next; // the target for deletion
-  // stop looping if the search is <x> or the target, the result is the node before key
-  while(search->next->key != key) {
-    if(search == x){
-      return NULL;
-    }
+  // stop looping if the search is <x> or the target
+  while(!(search == x || search->key == key)) {
+    //search -> next refers to the 'next' field of the 'Node' structure that 'sentinel' points to
+    //this 'next' field holds the address of the next node in the list
     search = search->next;
   }
   return search;
@@ -105,17 +92,13 @@ Node *searchNodeByKey(Node *x, int key) {
 
 /* x should be sentinel_node */
 void deleteKey(Node *x, int del_key) {
-  Node *current = x->next;
-  Node *temp = x;
-  while(current != x && current->key != del_key){
-    temp = current;
-    current = current->next;
-  }
-  if (current == x) {
+  Node *search = searchNodeByKey(x, del_key);
+  if (search == x) {
     printf("%d is not found.\n", del_key);
   } else {
-    temp->next = current->next;
-    free(current);
+    search->next = search->next;
+    //delete the search node
+    free(search);
   }
 }
 

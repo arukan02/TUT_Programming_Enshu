@@ -60,6 +60,8 @@ Node *initialize(void) {
     puts("No resource remained.");
     exit(1);
   }
+  //set a default value for key
+  x->key = 0;
   x->next = x;
   return x;
 }
@@ -86,12 +88,17 @@ Node *searchNodeByKey(Node *x, int key) {
 
 /* x should be sentinel_node */
 void deleteKey(Node *x, int del_key) {
-  Node *search = searchNodeByKey(x, del_key);
-  if (search == x) {
+  Node *current = x->next;
+  Node *temp = x;
+  while(current != x && current->key != del_key){
+    temp = current;
+    current = current->next;
+  }
+  if (current == x) {
     printf("%d is not found.\n", del_key);
   } else {
-    search->next = search->next;
-    free(search);
+    temp->next = current->next;
+    free(current);
   }
 }
 
