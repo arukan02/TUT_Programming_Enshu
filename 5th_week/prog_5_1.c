@@ -57,9 +57,13 @@ int main(void) {
 /* sorting by bubble sort */
 void bubble_sort(int array[], int n) {
   int i, j, temp;
-  for (i = 1; i <= n - 1; i++) {
+  for (i = 0; i <= n - 1; i++) {
     for (j = n - 1; j >= i; j--) {
-      /* implement sort algorithm here */
+      if(array[i]>array[j]){
+        temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
     }
   }
 }

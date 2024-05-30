@@ -81,7 +81,7 @@ void quick_sort(int array[], int front, int rear) {
   pivot = array[ pindex ]; /* pivot selection */
   do {
     while (f <= rear  && array[f] <  pivot) {  f++; }
-    while (r >= front && array[r] >= pivot) {  r--; }
+    while (r >= front && array[r] > pivot) {  r--; }
     if (f <= r) {
       printf(" %d <-> %d\n", array[f], array[r]);
       SWAP(int, array[f], array[r]);
@@ -90,13 +90,18 @@ void quick_sort(int array[], int front, int rear) {
       r--;
     }
   } while (f <= r);
-  printf("[%d %d] / [%d %d]\n", front, r, f, rear);
+  //printf("[%d %d] / [%d %d]\n", front, r, f, rear);
 
   if (r < front) {
     // there is no element less than pivot
+    return;
+
   } else {
     // there are two part for next step
-  }
+    //r = f or f > rear
+      quick_sort(array, f, rear);
+      quick_sort(array, front, r);
+}
 }
 
 /* debug */
