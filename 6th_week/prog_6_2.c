@@ -1,107 +1,148 @@
-/* Example of quick sort */
+/* 〇課題6.2 */
 /* header files */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
 
+#define DEBUG 0
+
 /* define */
-#define N 20    // the number of array elements
-#define MAX 40  // the range of elements (1 - MAX)
-#define SWAP(type_, xx, yy) { type_ temp = xx; xx = yy; yy = temp; }
+#define MAX 100 // the range of elements (1 - MAX)
+
+/* functions */
+void merge(int array[], int temp[], int front, int rear);
 
 /* for debug */
 int check_sorted(int original[], int sorted[], int n);
 
-/* functions */
-void quick_sort(int array[], int front, int rear);
-
 /* main */
-int main(void) {
-  int i, original[N], array[N];
+int main(int argc, char **argv) {
+  int *array;
+  int *original;
+  int *temp;
+  int n = 30;
+  int i;
   struct timeval start, end;        // structures for time measurement
 
-  /* making random array */
-  srand((unsigned int )time(NULL)); // set seed for randomization
-  puts("An array of integers in random order.");
-  for (i = 0; i < N; i++) {
-    array[i] = rand() % MAX + 1;
-    original[i] = array[i];
-    printf("%d ", array[i]); /* print initial */
+  if (argc > 1) {
+    n = atoi(argv[1]);
   }
+  array = (int *)malloc(sizeof(int) * n);
+  temp  = (int *)malloc(sizeof(int) * n);
+  original = (int *)malloc(sizeof(int) * n);
 
-  /* process sorting */
-  puts("\nSorting by quick sort.");
-  gettimeofday(&start, NULL);
-  quick_sort(array, 0, N-1);
-  gettimeofday(&end, NULL);
-
-  /* print result */
-  for (i = 0; i < N; i++) {
+  srand((unsigned int )time(NULL)); // set seed for randomization
+  for (i = 0; i < n; i++) {
+    original[i] = array[i] = rand() % MAX + 1;
+  }
+#ifdef DEBUG
+  puts("An array of integers in random order.");
+  for (i = 0; i < n; i++) {
+//      array[i] = rand() % MAX + 1;
     printf("%d ", array[i]);
   }
+  puts("\nSorting by merge sort.");
+#endif
 
-  /* show processing time */
-  printf("\nTime taken by quick sort %f s.\n",
+  gettimeofday(&start, NULL);
+  merge(array, temp, 0, n - 1);
+  gettimeofday(&end, NULL);
+
+#ifdef DEBUG
+  for (i = 0; i < n; i++) {
+    printf("%d ", array[i]);
+  }
+#endif
+  printf("\nTime taken by merge sort: %f s.\n",
          (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) * 1.0e-6);
 
+#ifdef DEBUG
   /* check validation */
-  i = check_sorted(original, array, N);
+  i = check_sorted(original, array, n);
   if (i == 0) {
     puts("### Warning ###   Sort Failed");
     return 1;
   }
-
+#endif
   return 0;
 }
 
-/* function version of swap */
-void int_swap(int *x, int *y)
-{
-  int tmp = *x;
-  *x = *y;
-  *y = tmp;
-}
-
-/* sorting by quick sort */
-void quick_sort(int array[], int front, int rear) {
-  // for 2 elements
-  if (rear - front == 1) {
-    if (array[front] > array[rear]) {
-      int diff = array[front];
-      array[front] = array[rear];
-      array[rear] = diff;
-    }
+/* sorting by merge sort */
+void merge(int array[], int temp[], int front, int rear) {
+  int mid, cur_f, cur_m, i;
+#if DEBUG
+  printf("*** merge called by front = %d, rear = %d, mid = %d: ",
+         front, rear, (front + rear) / 2);
+  for (i = front; i <= rear; i++) {
+    printf("%d ", array[i]);
+  }
+  printf("\n");
+#endif
+  // return if front is equal to rear (only one element)
+  if (front == rear) {
     return;
   }
-  // more than 2 elements
-  int pivot, pindex, f, r;
-  f = front; r = rear;
-  pindex = (f + r)/2;
-  pivot = array[ pindex ]; /* pivot selection */
-  do {
-    while (f <= rear  && array[f] <  pivot) {  f++; }
-    while (r >= front && array[r] > pivot) {  r--; }
-    if (f <= r) {
-      printf(" %d <-> %d\n", array[f], array[r]);
-      SWAP(int, array[f], array[r]);
-      // OR // int_swap(&(array[f]), &(array[r]));
-      f++;
-      r--;
-    }
-  } while (f <= r);
-  printf("[%d %d] / [%d %d]\n", front, r, f, rear);
 
-  if (r < front) {
-    // there is no element less than pivot
-    return;
+  // update mid with a value intermediate between front and rear
+  mid = (front + rear) / 2;
 
-  } else {
-    // there are two part for next step
-    //r = f or f > rear
-      quick_sort(array, f, rear);
-      quick_sort(array, front, r);
+  // recursive calls of the function merge() in the range
+  // from front to mid, and from mid + 1 to rear, respectively
+  merge(array, temp, front, mid);
+  merge(array, temp, mid + 1, rear);
+#if DEBUG
+  printf("\tStart merging with f = %d, m = %d: ", front, mid + 1);
+#endif
+  // copy the array data to the temporal array
+  for (i = front; i <= rear; i++) {
+    temp[i] = array[i];
+#if DEBUG
+    printf("%d ", temp[i]);
+#endif
   }
+#if DEBUG
+  printf("\n");
+#endif
+  cur_f = front;
+  cur_m = mid + 1;
+
+  // merge the two halves of the array in ascending order
+  i = front;
+    while(cur_f <= mid && cur_m <= rear){
+      if(temp[cur_f] <= temp[cur_m]){
+        array[i] = temp[cur_f];
+        cur_f += 1;
+      }
+      else{
+        array[i] = temp[cur_m];
+        cur_m += 1;
+      }
+      i++;
+    }
+    while(cur_f <= mid){
+      array[i] = temp[cur_f];
+      cur_f += 1;
+      i++;
+    }
+    while(cur_m <= rear){
+      array[i] = temp[cur_m];
+      cur_m += 1;
+      i++;
+    }
+  
+  
+  /*
+  Write merge process here
+  */
+
+#if DEBUG
+  printf("\tEnd merge: ");
+  for (i = front; i <= rear; i++) {
+    printf("%d ", array[i]);
+  }
+  printf("\n");
+#endif
 }
 
 /* debug */
