@@ -1,4 +1,4 @@
-/* Example of quick sort */
+/* Example of bubble sort */
 /* header files */
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,15 +6,14 @@
 #include <sys/time.h>
 
 /* define */
-#define N 20    // the number of array elements
-#define MAX 40  // the range of elements (1 - MAX)
-#define SWAP(type_, xx, yy) { type_ temp = xx; xx = yy; yy = temp; }
+#define N 30     // the number of array elements
+#define MAX 100  // the range of elements (1 - MAX)
 
 /* for debug */
 int check_sorted(int original[], int sorted[], int n);
 
 /* functions */
-void quick_sort(int array[], int front, int rear);
+void bubble_sort(int array[], int n);
 
 /* main */
 int main(void) {
@@ -31,9 +30,9 @@ int main(void) {
   }
 
   /* process sorting */
-  puts("\nSorting by quick sort.");
+  puts("\nSorting by bubble sort.");
   gettimeofday(&start, NULL);
-  quick_sort(array, 0, N-1);
+  bubble_sort(array, N);
   gettimeofday(&end, NULL);
 
   /* print result */
@@ -42,7 +41,7 @@ int main(void) {
   }
 
   /* show processing time */
-  printf("\nTime taken by quick sort %f s.\n",
+  printf("\nTime taken by bubble sort %f s.\n",
          (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) * 1.0e-6);
 
   /* check validation */
@@ -55,52 +54,17 @@ int main(void) {
   return 0;
 }
 
-/* function version of swap */
-void int_swap(int *x, int *y)
-{
-  int tmp = *x;
-  *x = *y;
-  *y = tmp;
-}
-
-/* sorting by quick sort */
-void quick_sort(int array[], int front, int rear) {
-  // for 2 elements
-  if (rear - front == 1) {
-    if (array[front] > array[rear]) {
-      int diff = array[front];
-      array[front] = array[rear];
-      array[rear] = diff;
+/* sorting by bubble sort */
+void bubble_sort(int array[], int n) {
+  int i, j, temp;
+  for (i = 0; i <= n - 1; i++) {
+    for (j = n - 1; j >= i; j--) {
+      if(array[i]>array[j]){
+        temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
     }
-    return;
-  }
-  // more than 2 elements
-  int pivot, pindex, f, r;
-  f = front; r = rear;
-  pindex = (f + r)/2;
-  pivot = array[ pindex ]; /* pivot selection */
-  do {
-    while (f <= rear  && array[f] <  pivot) {  f++; }
-    while (r >= front && array[r] > pivot) {  r--; }
-    if (f <= r) {
-      printf(" %d <-> %d\n", array[f], array[r]);
-      SWAP(int, array[f], array[r]);
-      // OR // int_swap(&(array[f]), &(array[r]));
-      f++;
-      r--;
-    }
-  } while (f <= r);
-  printf("[%d %d] / [%d %d]\n", front, r, f, rear);
-
-  if (r < front) {
-    // there is no element less than pivot
-    return;
-
-  } else {
-    // there are two part for next step
-    //r = f or f > rear
-      quick_sort(array, f, rear);
-      quick_sort(array, front, r);
   }
 }
 
