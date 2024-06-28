@@ -3,30 +3,139 @@
 学籍番号: b243392
 提出年月日: 2024年6月28日
 
-10.1 
+10.1 2次方程式の解の判別における誤差
 10.1.1. プログラム
 --- prog_10_1.c
 /* header files */
+#include <stdio.h>
+#include <math.h>
+#include <float.h>
+
+int main(void){
+  double a,b,c,D;
+  printf("The solution to ax^2 + bx + c = 0\n");
+  printf("a: "); scanf("%lf",&a);
+  printf("b: "); scanf("%lf",&b);
+  printf("c: "); scanf("%lf",&c);
+
+  D = b * b - 4 * a * c;
+
+  //make the epsilon bigger or smaller depending on the b
+  if (fabs(D) <= DBL_EPSILON * fabs(b * b)) {
+    printf("A repeated root = %.30f\n", -b / (2 * a));
+  } else if ( D > 0) {
+    printf("Two real roots = %.30f, %.30f\n",
+           (-b + sqrt(D)) / (2 * a),
+           (-b - sqrt(D)) / (2 * a));
+  } else {
+    printf("Two complex roots = %.30f + %.30f i, %.30f - %.30f i\n",
+           -b / (2 * a), sqrt(-D) / (2 * a),
+           -b / (2 * a), sqrt(-D) / (2 * a));
+  }
+
+  return 0;
+}
 ---
 
 10.1.2. 実行結果 // コンソールをコピー
 [a243392@xdev05 kadai10]$ gcc prog_10_1.c
 [a243392@xdev05 kadai10]$ ./prog101
+The solution to ax^2 + bx + c = 0
+a: 0.0025
+b: 0.1
+c: 1.0
+A repeated root = -20.000000000000000000000000000000
+[a243392@xdev05 kadai10]$ ./prog101
+The solution to ax^2 + bx + c = 0
+a: 25.5025
+b: 10.1
+c: 1.0
+A repeated root = -0.198019801980198001389865680721
 [a243392@xdev05 kadai10]$
 
-10.2．
+10.2．2次方程式の解における誤差
 10.2.1. プログラム
---- prog_10_2.c 
+--- prog_10_1.c をそのまま使った
 ---
 
 10.2.2. 実行結果
-[a243392@xdev05 kadai10]$ gcc prog_10_2.c
-[a243392@xdev05 kadai10]$ ./prog102
+[a243392@xdev05 kadai10]$ ./prog101
+The solution to ax^2 + bx + c = 0
+a: 1.0
+b: 1000000000.0
+c: 1.0
+Two real roots = 0.000000000000000000000000000000, -1000000000.000000000000000000000000000000
+[a243392@xdev05 kadai10]$ ./prog101
+The solution to ax^2 + bx + c = 0
+a: 1.0
+b: 10000000.0
+c: 1.0
+Two real roots = -0.000000099651515483856201171875, -9999999.999999899417161941528320312500
 [a243392@xdev05 kadai10]$ 
 
-10.3．
+10.2.2.2．考察
+b = 10^9 の時、b*bの結果が10^18になり、ルートの計算で大きな値同士の差が生じ、桁落ちが発生するために生じる。
+特に、ポジティブのルートの計算ではbとsqrt(D)がほぼ等しいために桁落ち誤差が発生し、結果として0.0が得られる。
+ネガティブのルートの計算では大きな負の値が得られるが、情報落ち誤差が生じる。
 
+b = 10^7の時、同じく桁落ち誤差と情報落ち誤差が生じるが、b*bの結果が10^14であるから、比較的に小さい桁数である。
+そのため、結果が0.00...と-10000000.00...にならない。
+
+10.3．2次方程式の解における誤差の回避
+10.3.1. プログラム
+--- prog_10_3.c 
+/* header files */
+#include <stdio.h>
+#include <math.h>
+#include <float.h>
+
+int main(void){
+  double a,b,c,D;
+  printf("The solution to ax^2 + bx + c = 0\n");
+  printf("a: "); scanf("%lf",&a);
+  printf("b: "); scanf("%lf",&b);
+  printf("c: "); scanf("%lf",&c);
+
+  D = b * b - 4 * a * c;
+
+  //make the epsilon bigger or smaller depending on the b
+  if (fabs(D) <= DBL_EPSILON * fabs(b * b)) {
+    printf("A repeated root = %.30f\n", -b / (2 * a));
+  } else if ( D > 0) {
+    //separate the case when b is positive and when b is negative to make the calculation more stable
+    //a is not included to make the q a stable intermediate value
+    double q = (b > 0) ? -0.5 * (b + sqrt(D)) : -0.5 * (b - sqrt(D));
+	//using fundamental properties of quadratic equations x1*x2 = q/a * q/c = c/a
+        double root1 = q / a;
+        double root2 = c / q;
+        printf("Two real roots = %.30f, %.30f\n", root1, root2);
+  } else {
+    printf("Two complex roots = %.30f + %.30f i, %.30f - %.30f i\n",
+           -b / (2 * a), sqrt(-D) / (2 * a),
+           -b / (2 * a), sqrt(-D) / (2 * a));
+  }
+
+  return 0;
+}
+---
+
+10.3.2. 実行結果
+[a243392@xdev05 kadai10]$ gcc prog_10_3.c
+[a243392@xdev05 kadai10]$ ./prog103
+The solution to ax^2 + bx + c = 0
+a: 1.0
+b: 10000000.0
+c: 1.0
+Two real roots = -9999999.999999899417161941528320312500, -0.000000100000000000001001326436
+[a243392@xdev05 kadai10]$ ./prog103
+The solution to ax^2 + bx + c = 0
+a: 1.0
+b: -10000000.0
+c: 1.0
+Two real roots = 9999999.999999899417161941528320312500, 0.000000100000000000001001326436
+[a243392@xdev05 kadai10]$ 
 
 10.4. 感想 // 150字程度
-
+10.1は第9回のレポートとほぼ同じやり方であるから、すぐに終わった。
+10.2と10.3は同時に考えた。計算を安定にすることを最初は分からなかったので、それを調べながらプログラムを書いた。
 

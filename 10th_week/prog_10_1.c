@@ -1,42 +1,29 @@
 /* header files */
 #include <stdio.h>
+#include <math.h>
+#include <float.h>
 
-/* define */
-#define MAX 15
+int main(void){
+  double a,b,c,D;
+  printf("The solution to ax^2 + bx + c = 0\n");
+  printf("a: "); scanf("%lf",&a);
+  printf("b: "); scanf("%lf",&b);
+  printf("c: "); scanf("%lf",&c);
 
-/* functions */
-int route( int v, int h, int save[MAX][MAX]);
+  D = b * b - 4 * a * c;
 
-/* main */
-int main(void)
-{
-  int h, v;
-  puts("The number of the shortest paths");
-  printf("Enter the number of path in the vertical axis v (1 <= v <= %d): ", MAX);
-  scanf ("%d", &v);
-  printf("Enter the number of path in the horizontal axis h (1 <= h <= %d): ", MAX);
-  scanf ("%d", &h);
-
-  //initialize the save array
-  int save[MAX][MAX];
-  for(int i = 0; i < MAX; ++i)
-    for(int j = 0; j < MAX; ++j)
-      save[i][j] = -1;
-  
-  printf("The answer is %d.\n", route(v - 1, h - 1, save));
-  return 0;
-}
-
-/* full search */
-int route( int v, int h, int save[MAX][MAX]) {
-  if (v == 0 || h == 0) {
-    return 1;
-  } 
-  if(save[v][h] != -1) {
-    return save[v][h];
+  //make the epsilon bigger or smaller depending on the b
+  if (fabs(D) <= DBL_EPSILON * fabs(b * b)) {
+    printf("A repeated root = %.30f\n", -b / (2 * a));
+  } else if ( D > 0) {
+    printf("Two real roots = %.30f, %.30f\n",
+           (-b + sqrt(D)) / (2 * a),
+           (-b - sqrt(D)) / (2 * a));
+  } else {
+    printf("Two complex roots = %.30f + %.30f i, %.30f - %.30f i\n",
+           -b / (2 * a), sqrt(-D) / (2 * a),
+           -b / (2 * a), sqrt(-D) / (2 * a));
   }
 
-  //search for save if not found
-  save[v][h] = route(v - 1, h, save) + route(v, h - 1, save);
-  return save[v][h];
+  return 0;
 }
