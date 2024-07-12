@@ -1,0 +1,135 @@
+プログラミング応用演習I 第12回課題レポート 
+氏名: Alcander Imawan
+学籍番号: b243392
+提出年月日: 2024年7月12日
+
+12.1 ベイズ推定 -感染確率問題
+12.1.1. プログラム
+--- prog_12_1.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Function to calculate P(A|B) using Bayes' theorem
+double bayes(double pBgivenA, double pBgivenNotA, double pA) {
+    double pNotA = 1.0 - pA;
+    double pB = (pBgivenA * pA) + (pBgivenNotA * pNotA);
+    return (pBgivenA * pA) / pB;
+}
+
+// Function to calculate P(A|B) using the Monte Carlo method
+double bayes_monte(double pBgivenA, double pBgivenNotA, double pA) {
+    long trials = 1000000;
+    long truePositives = 0;
+    long falsePositives = 0;
+
+    for (long i = 0; i < trials; i++) {
+        if ((double)rand() / RAND_MAX < pA) { // Person is infected
+            if ((double)rand() / RAND_MAX < pBgivenA) { // Positive test
+                truePositives++;
+            }
+        } else { // Person is not infected
+            if ((double)rand() / RAND_MAX < pBgivenNotA) { // Positive test
+                falsePositives++;
+            }
+        }
+    }
+
+    double totalPositives = truePositives + falsePositives;
+    return (double)truePositives / totalPositives;
+}
+
+int main() {
+    double pA = 1.0 / 5000;          // Prevalence of disease
+    double pBgivenA = 0.99;          // True positive rate
+    double pBgivenNotA = 1.0 - 0.98; // False positive rate
+
+    // Calculate P(A|B) using Bayes' theorem
+    double result_bayes = bayes(pBgivenA, pBgivenNotA, pA);
+    printf("Bayesian inference P[A|B].\n");
+    printf("P[B|A]: %.2f\n", pBgivenA);
+    printf("P[B|~A]: %.2f\n", pBgivenNotA);
+    printf("P[A]: %.5f\n", pA);
+    printf("P[A|B] = %.6f\n", result_bayes);
+
+    // Calculate P(A|B) using Monte Carlo method
+    srand((unsigned int)time(NULL));
+    double result_monte = bayes_monte(pBgivenA, pBgivenNotA, pA);
+    printf("P[A|B] = %.6f (by Monte Carlo)\n", result_monte);
+
+    return 0;
+}
+---
+
+12.1.2. 実行結果 // コンソールをコピー
+[a243392@xdev04 kadai12]$ gcc prog_12_1.c
+[a243392@xdev04 kadai12]$ ./prog121
+Bayesian inference P[A|B].
+P[B|A]: 0.99
+P[B|~A]: 0.02
+P[A]: 0.00020
+P[A|B] = 0.009805
+P[A|B] = 0.009704 (by Monte Carlo)
+[a243392@xdev04 kadai12]$
+
+12.1.3 解説
+bayes関数
+引数として真の陽性率、偽の陽性率、および病気の有病率を受け取り、Bayesの定理を使って条件付き確率 
+P(A∣B) を計算する。
+計算は次の通りである：
+P(A∣B)= (P(B∣A)　x P(A)) / P(B)
+ここでP(B) は以下のように計算されする：
+P(B)=P(B∣A)⋅P(A)+P(B∣¬A)⋅P(¬A)
+
+bayes_monte関数
+モンテカルロ法を使って条件付き確率P(A∣B) を計算する。
+多くの試行を行い、各試行で人が病気に感染しているかどうかをランダムに決定し、さらにテストが陽性かどうかを決定する。
+実際に陽性反応を示した試行のうち、病気に感染している試行の割合を計算する。
+
+12.2 3つの扉問題
+12.2.1. プログラム
+--- prog_12_2.c 
+
+---
+
+12.2.2. 実行結果
+[a243392@xdev04 kadai12]$ gcc prog_12_2.c
+[a243392@xdev04 kadai12]$ ./prog122
+Will you change the door? <yes...1 / no...0>: 1
+Looping number: 100000
+Win 66571
+Lose 33429
+Winning rate 0.665710
+
+[a243392@xdev04 kadai12]$ ./prog122
+Will you change the door? <yes...1 / no...0>: 0
+Looping number: 100000
+Win 33679
+Lose 66321
+Winning rate 0.336790
+[a243392@xdev04 kadai12]$ 
+
+12.2.3 解説
+doors 関数:
+プレイヤーの選択が「変更するかどうか」（changeDoor）とシミュレーションの回数（loops）を引数として受け取る。
+loops 回のシミュレーションを実行し、プレイヤーの選択に応じてドアを変更するかどうかを決定する。
+各試行での勝敗をカウントし、最終的な勝率を計算して出力する。
+
+12.3．ベイズ推定を用いて3つの扉問題の解答を導こう
+じつはベイズ推定を上手く用いると、3つの扉問題の答えを理論的に導くことができる。これについて説明せよ
+
+まずは事前確率を定義する。初めに選んだ扉が車の扉である確率は1/3であり、初めに選んだ扉がヤギの扉である確率は2/3である。
+P(ホストがヤギの扉を開ける|選んだ扉に車が隠れている):
+初めに選んだ扉に車がある場合、ホストは残りの2つの扉から1つを開けることになりますが、必ずヤギの扉を開ける。この確率は1である。
+P(ホストがヤギの扉を開ける|選んだ扉にヤギが隠されている):
+初めに選んだ扉にヤギがある場合、ホストは2つのヤギの扉から1つを開ける確率は1である。
+
+ベイズの定理を使って、プレイヤーが扉を変更した場合の確率を求める。
+P(車が他の扉にある∣ホストがヤギの扉を開けた)= (P(ホストがヤギの扉を開けた∣車が他の扉にある)×P(車が他の扉にある)) / P(ホストがヤギの扉を開けた)
+
+ベイズの定理により、扉を変更した場合の車の当選確率は以下のように求められる。
+P(車が他の扉にある)= (P(ホストがヤギの扉を開けた|車が他の扉にある)×P(車が他の扉にある)) / P(ホストがヤギの扉を開けた)
+ここで、P(車が他の扉にある|ホストがヤギの扉を開けた)= (1 x 2/3) / 1 = 2/3
+よって、ドアを変更することで車を得る確率は2/3である。
+
+初めの選択で車を得る確率は1/3なので、ドアを変更する方が有利であることがわかる。
