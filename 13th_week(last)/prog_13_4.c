@@ -9,9 +9,9 @@
 
 /* functions */
 void lifegame(void);
-void display_and_count(int life[BIN][HEIGHT + BIN][WIDTH + BIN]);
+void display_and_count(int life[BIN][HEIGHT + BIN][WIDTH + BIN], int generation);
 void update(int life[BIN][HEIGHT + BIN][WIDTH + BIN]);
-void load(int life[BIN][HEIGHT + BIN][WIDTH + BIN], const char *filename);
+void load(int life[BIN][HEIGHT + BIN][WIDTH + BIN], const char *filename, int *initial_lives);
 
 /* main */
 int main(void) {
@@ -22,18 +22,26 @@ int main(void) {
 /* life game */
 void lifegame(void) {
     int life[BIN][HEIGHT + BIN][WIDTH + BIN] = {{{0}}};
-    load(life, "diehard.txt");
-    int generations = 131;
+    int initial_lives = 0;
+    const char *filename = "line.txt";
 
-    for (int gen = 0; gen < generations; gen++) {
+    printf("File name: %s\n", filename);
+    load(life, filename, &initial_lives);
+    printf("The number of initial lives: %d\n", initial_lives);
+
+    for (int gen = 1; gen <= 131; gen++) {
+        printf("Press <Enter> to show the next generation, other keys and <Enter> to exit: ");
+        if (getchar() != '\n') {
+            break;
+        }
         printf("Generation: %d\n", gen);
-        display_and_count(life);
+        display_and_count(life, gen);
         update(life);
     }
 }
 
 /* load initial conditions from file */
-void load(int life[BIN][HEIGHT + BIN][WIDTH + BIN], const char *filename) {
+void load(int life[BIN][HEIGHT + BIN][WIDTH + BIN], const char *filename, int *initial_lives) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Failed to open file");
@@ -43,15 +51,24 @@ void load(int life[BIN][HEIGHT + BIN][WIDTH + BIN], const char *filename) {
     int x, y;
     while (fscanf(file, "%d %d", &x, &y) != EOF) {
         life[0][x][y] = 1;
+        (*initial_lives)++;
+        printf("life[1][%d][%d] = 1\n", x, y);
     }
 
     fclose(file);
 }
 
 /* display the grid and count life */
-void display_and_count(int life[BIN][HEIGHT + BIN][WIDTH + BIN]) {
+void display_and_count(int life[BIN][HEIGHT + BIN][WIDTH + BIN], int generation) {
     int life_count = 0;
+    printf("|");
+    for (int j = 0; j < WIDTH + 2; j++) {
+        printf(" ");
+    }
+    printf("|\n");
+
     for (int i = 0; i < HEIGHT; i++) {
+        printf("|");
         for (int j = 0; j < WIDTH; j++) {
             if (life[0][i][j]) {
                 life_count++;
@@ -60,10 +77,17 @@ void display_and_count(int life[BIN][HEIGHT + BIN][WIDTH + BIN]) {
                 printf(" ");
             }
         }
-        printf("\n");
+        printf("|\n");
     }
+
+    printf("|");
+    for (int j = 0; j < WIDTH + 2; j++) {
+        printf(" ");
+    }
+    printf("|\n");
+
     if (life_count == 0) {
-        printf("Life has gone extinct.\n");
+        printf("Life has gone extinct at generation %d.\n", generation);
         exit(EXIT_SUCCESS);
     }
 }

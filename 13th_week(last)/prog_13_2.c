@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 /* define */
-#define MAX 101
+#define MAX 10001
 #define MAX_UNITS 10
 
 /* functions */
@@ -26,7 +26,7 @@ int main(void) {
     scanf("%d", &coin_types[i]);
   }
 
-  printf("Enter an amount of money x (1 <= x <= 50): ");
+  printf("Enter an amount of money x (1 <= x <= 10000): ");
   scanf("%d", &x);
 
   coins(coin_types, num_units, x);
