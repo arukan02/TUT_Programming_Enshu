@@ -1,0 +1,275 @@
+プログラミング応用演習I 第11回課題レポート 
+氏名: Alcander Imawan
+学籍番号: b243392
+提出年月日: 2024年7月12日
+
+11.1 モンテカルロ法
+11.1.1. プログラム
+--- prog_11_1.c
+/* header files */
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+/* main */
+int main(void) {
+    long n;
+    puts("Calculating pi");
+    printf("Loop counts n: ");
+    scanf("%ld", &n);
+
+    long i;
+    long counter = 0;
+    double x, y;
+    srand((unsigned int)time(NULL));
+    
+    for (i = 0; i < n; i++) {
+        x = (double)rand() / RAND_MAX;
+        y = (double)rand() / RAND_MAX;
+
+        if (x * x + y * y <= 1) {
+            counter++;
+        }
+    }
+
+    double pi_estimate = 4.0 * ((double)counter / n);
+    printf("Estimated pi = %lf\n", pi_estimate);
+
+    return 0;
+}
+---
+
+11.1.2. 実行結果 // コンソールをコピー
+[a243392@xdev05 kadai11]$ gcc prog_11_1.c
+[a243392@xdev05 kadai11]$ ./prog111
+Calculating pi
+Loop counts n: 100000
+pi = 3.146560
+[a243392@xdev05 kadai11]$
+
+11.2．中心極限定理 -正規分布を近似しよう
+11.2.1. プログラム
+--- prog_11_2.c 
+/* header files */
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+/* define */
+#define MAX 100
+#define DICE 6
+#define UNIT 1000
+
+#if 0
+#define DICE_1 0.5 // 0.0 ~ 0.5
+#define DICE_2 0.6 // ~ 0.6
+#define DICE_3 0.7 // ~ 0.7
+#define DICE_4 0.8 // ~ 0.8
+#define DICE_5 0.9 // ~ 0.9
+//      DICE_6     // 0.9 ~ 1.0
+#endif
+//// normal dice
+#define DICE_1 0.1666667
+#define DICE_2 0.3333333
+#define DICE_3 0.5
+#define DICE_4 0.6666667
+#define DICE_5 0.8333333
+//      DICE_6     // 0.9 ~ 1.0
+
+int dice() {
+    double d = ((double)rand())/RAND_MAX;
+    if (d <= DICE_1) {
+        return 1;
+    } else if (d <= DICE_2) {
+        return 2;
+    } else if (d <= DICE_3) {
+        return 3;
+    } else if (d <= DICE_4) {
+        return 4;
+    } else if (d <= DICE_5) {
+        return 5;
+    }
+    return 6;
+}
+
+void print_hist(long count[], int num, int unit, int cast)
+{
+  long cnt;
+  for(int i = 0; i < num; i++) {
+    cnt = count[i]/unit;
+    printf("%02d:", i + cast);
+    for(int j = 0; j < cnt; j++) {
+      printf("*");
+    }
+    printf("\n");
+  }
+}
+
+/* main */
+int main(void) {
+    long cast, repeat;
+    puts("The central limit theorem.");
+    printf("The number of dice cast: ");
+    scanf("%ld", &cast);
+    printf("The repeat number: ");
+    scanf("%ld", &repeat);
+    printf("\n");
+    srand((unsigned int)time(NULL));
+
+    long *count = (long *)calloc(cast * 6 - cast + 1, sizeof(long));
+    if (count == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
+
+    for (long i = 0; i < repeat; i++) {
+        int sum = 0;
+        for (long j = 0; j < cast; j++) {
+            sum += dice();
+        }
+        count[sum - cast]++;
+    }
+
+    print_hist(count, cast * 6 - cast + 1, 1000, cast);
+
+    // Free the allocated memory
+    free(count);
+
+    return 0;
+}
+---
+
+11.2.2. 実行結果
+[a243392@xdev05 kadai11]$ gcc prog_11_2.c
+[a243392@xdev05 kadai11]$ ./prog112
+The central limit theorem.
+The number of dice cast: 6
+The repeat number: 500000
+
+06:
+07:
+08:
+09:
+10:*
+11:**
+12:****
+13:********
+14:************
+15:*****************
+16:************************
+17:******************************
+18:************************************
+19:******************************************
+20:*********************************************
+21:**********************************************
+22:*********************************************
+23:******************************************
+24:************************************
+25:******************************
+26:************************
+27:*****************
+28:************
+29:********
+30:****
+31:**
+32:*
+33:
+34:
+35:
+36:
+[a243392@xdev05 kadai11]$ 
+
+11.3．正規分布の平均と分散
+前課題11.2の cast = 6 における正規分布の母平均と母分散。
+母平均
+一個のサイコロの平均
+E[X]=sum_for(i = 1; i <= 6; i++) i x P(X=i) = sum_for(i = 1; i <= 6; i++) i x 1/6 = 
+(1+2+3+4+5+6)/6 = 3.5
+6個のサイコロ平均は
+6 x E[X]= 6 x 3.5 = 21
+
+母分散
+一個のサイコロの分散は
+Var(X)=E[X^2]−(E[X])^2
+まず、E[X^2]を計算する。
+E[X^2]=sum_for(i = 1; i <= 6; i++) i^2 x P(X=i) = sum_for(i = 1; i <= 6; i++) i^2 x 1/6 = 
+(1^2+2^2+3^2+4^2+5^2+6^2)/6 = 91/6 = 15.167
+次に、分散を計算する。
+Var(X)=15.167−(3.5)^2 = 15.167 - 12.25 = 2.917 
+6個のサイコロの分散は
+Var(sum) = 6 × Var(X) = 6 × 2.92 = 17.52
+
+
+11.4. 正規分布の平均と分散2
+11.4.1. プログラム
+--- prog_11_4.c 
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+
+#define REPEAT 1000000 // 大規模な試行回数
+
+double probabilities[6] = {0.1, 0.2, 0.3, 0.2, 0.1, 0.1};
+
+int weighted_dice() {
+    double r = (double)rand() / RAND_MAX;
+    double cumulative_probability = 0.0;
+    for (int i = 0; i < 6; i++) {
+        cumulative_probability += probabilities[i];
+        if (r < cumulative_probability) {
+            return i + 1;
+        }
+    }
+    return 6; // 最後のケース
+}
+
+int main(void) {
+    srand((unsigned int)time(NULL));
+
+    int cast = 6; // サイコロの回数
+    long repeat = REPEAT;
+
+    // 理論的な母平均と母分散
+    //手動で計算した
+    double theoretical_mean = 3.3 * cast;
+    double theoretical_variance = 2.01 * cast;
+
+    // サンプリングによる統計値
+    double sum = 0;
+    double sum_of_squares = 0;
+
+    for (long i = 0; i < repeat; i++) {
+        int sum_cast = 0;
+        for (int j = 0; j < cast; j++) {
+            sum_cast += weighted_dice();
+        }
+        sum += sum_cast;
+        sum_of_squares += sum_cast * sum_cast;
+    }
+
+    double sample_mean = sum / repeat;
+    double sample_variance = (sum_of_squares / repeat) - (sample_mean * sample_mean);
+
+    printf("理論的な母平均: %f\n", theoretical_mean);
+    printf("サンプリングによる平均: %f\n", sample_mean);
+    printf("理論的な母分散: %f\n", theoretical_variance);
+    printf("サンプリングによる分散: %f\n", sample_variance);
+
+    return 0;
+}
+---
+
+11.4.2. 実行結果
+[a243392@xdev05 kadai11]$ gcc prog_11_4.c
+[a243392@xdev05 kadai11]$ ./prog114
+理論的な母平均: 19.800000
+サンプリングによる平均: 19.797641
+理論的な母分散: 12.060000
+サンプリングによる分散: 12.052664
+[a243392@xdev05 kadai11]$ 
+
+11.4.3 解説
+このプログラムを実行すると、理論的な母平均と母分散が計算され、サンプリングによる平均と分散が出力される。
+大量の試行を行うことで、サンプリングによる平均と分散が理論値に非常に近い値になることが確認できた。
+

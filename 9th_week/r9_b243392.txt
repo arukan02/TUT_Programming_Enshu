@@ -1,0 +1,129 @@
+プログラミング応用演習I 第9回課題レポート 
+氏名: Alcander Imawan
+学籍番号: b243392
+提出年月日: 2024年6月28日
+
+9.1．誤差
+9.1.1. プログラム
+--- prog_9_1.c
+/* header files */
+#include <stdio.h>
+#include <float.h>
+
+/* main */
+int main() {
+    // Display precision constants
+    printf("DBL_DIG: %d\n", DBL_DIG);
+    printf("DBL_EPSILON: %.30f\n", DBL_EPSILON);
+
+    // Rounding Error
+    // The value 0.1 cannot be exactly represented in binary floating-point format.
+    double rounding_error = 0.2 - 0.1;
+    printf("Rounding error: %.30f\n", rounding_error);
+
+    // Cancellation of Significant Digits
+    // When subtracting two nearly equal numbers, significant digits can be lost.
+    double b = 0.200006103515625;
+    double cancellation_error = b - 0.2;
+    printf("Cancellation of significant digits: %.20f\n", cancellation_error);
+
+    // Loss of Information
+    // When adding a small number to a large number, the small number can be lost due to the precision limits.
+    double large_number = 1e16;
+    double small_number = 1.0;
+    double loss_of_information = large_number + small_number;
+    printf("Loss of information: %.20f\n", loss_of_information);
+
+    return 0;
+}
+---
+
+9.1.2. 実行結果 // コンソールをコピー
+[a243392@xdev06 kadai9]$ gcc prog_9_1.c
+[a243392@xdev06 kadai9]$ ./prog91
+DBL_DIG: 15
+DBL_EPSILON: 0.000000000000000222044604925031
+Rounding error: 0.100000000000000005551115123126
+Cancellation of significant digits: 0.00000610351562500000
+Loss of information: 10000000000000000.00000000000000000000
+
+[a243392@xdev06 kadai9]$
+
+9.1.3. 3つの誤差についての考察
+丸め誤差は、浮動小数点数が有限のビット数で表現されるために発生する。特に、2進数で表現できない10進数の値（例えば0.1）は、近似的に表現される。この近似値の結果として、数値が丸められ、誤差が生じる。
+0.1 の2進数表現は無限小数であり、浮動小数点数では有限のビット数で切り捨てられるため、誤差が発生する。
+桁落ちはほぼ等しい2つの数値を引き算すると、有効数字の多くが打ち消され、結果として精度が低下する。浮動小数点数では、数値が正規化されて格納されるため、非常に小さな差分の計算で有効数字が失われやすいである。
+0.200006103515625と0.2は非常に近い値であり、その差分の計算では有効数字が大幅に減少する。
+情報落ちは非常に大きな数と非常に小さな数を加算すると、小さな数が大きな数に対して無視されることがある。浮動小数点数では、数値の範囲が広いが、精度は限られているため、このような操作で小さな数が失われることがよくある。
+large_number に small_number を加えても、浮動小数点の精度の限界により small_number が無視される。
+
+9.2．計算機イプシロン
+9.2.1. プログラム
+--- prog_9_2.c 
+/* header files */
+#include <stdio.h>
+#include <float.h>
+
+int main(void) {
+
+double x, y, z;
+printf("Enter x y z: ");
+scanf("%lf%lf%lf", &x, &y, &z);
+
+if (x + y - z <= (2 * DBL_EPSILON)) { //
+puts("z is equal to x + y.");
+} else {
+puts("z is not equal to x + y.");
+}
+return 0;
+}
+---
+
+9.2.2. 実行結果
+[a243392@xdev06 kadai9]$ gcc prog_9_2.c
+[a243392@xdev06 kadai9]$ ./prog92
+Enter x y z: 0.1 0.2 0.3
+z is equal to x + y.
+
+[a243392@xdev06 kadai9]$./prog92
+Enter x y z: 10.1 10.2 20.3
+z is equal to x + y.
+[a243392@xdev06 kadai9]$ 
+
+9.3．桁落ちの回避
+9.3.1. プログラム
+--- prog_9_3.c 
+/* header files */
+#include <stdio.h>
+#include <float.h>
+#include <math.h>
+
+int main(void) {
+
+double x, y, z;
+printf("This program calculates √(x^2 + y^2) - y\n");
+printf("Enter x y: ");
+scanf("%lf%lf", &x, &y);
+
+double calc = sqrt( x * x + y * y) - y;
+printf("√(x^2 + y^2) - y = %.20f\n", calc);
+
+return 0;
+}
+---
+
+9.3.2. 実行結果
+[a243392@xdev06 kadai9]$ gcc -lm prog_9_3.c -o prog93
+[a243392@xdev06 kadai9]$ ./prog93
+This program calculates √(x^2 + y^2) - y
+Enter x y: 3 4
+√(x^2 + y^2) - y = 1.00000000000000000000
+[a243392@xdev06 kadai9]$ 
+
+//-lmは数学関数を使うプログラムをちゃんとリンクするフラグである。
+
+9.4. 感想 // 150字程度
+9.1を理解するために30分ぐらいかかった。問題を理解して、プログラムはすぐ終わる。
+9.2でDBL_EPSILONの理解度が試されて、最初はあまり理解できなかったと気づいた。もう一度スライドとネットで調べて、課題を解いた。
+9.3をコンパイルするとき、sqrt()の関数が認識されなかった。ネットで調べたら、-lmフラグを使うと、プログラムが動くという解決を見つけた。
+
